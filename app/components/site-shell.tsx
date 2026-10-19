@@ -12,6 +12,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <Link className="transition-colors hover:text-[#18201d]" href="/onboarding">Onboarding</Link>
             <Link className="transition-colors hover:text-[#18201d]" href="/help">Help</Link>
             <Link className="transition-colors hover:text-[#18201d]" href="/privacy">Privacy</Link>
+            <Link className="transition-colors hover:text-[#18201d]" href="/admin">Admin</Link>
           </nav>
         </div>
       </header>

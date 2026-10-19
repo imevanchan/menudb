@@ -16,7 +16,7 @@ async function MenuData() {
   let loadError: string | null = null;
 
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from("menus")
       .select(`

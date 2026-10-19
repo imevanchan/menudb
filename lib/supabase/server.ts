@@ -1,8 +1,9 @@
 import "server-only";
 
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-export function createServerSupabaseClient() {
+export async function createServerSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -12,11 +13,22 @@ export function createServerSupabaseClient() {
     );
   }
 
-  return createClient(url, publishableKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
+  const cookieStore = await cookies();
+
+  return createServerClient(url, publishableKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options),
+          );
+        } catch {
+          // Server Components cannot write cookies. The root proxy refreshes them.
+        }
+      },
     },
   });
 }
