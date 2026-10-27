@@ -81,9 +81,9 @@ async function MenuData() {
       </div>
 
       {categories.map((category) => {
-        const items = [...(category.menu_items ?? [])].sort(
-          (a, b) => a.sort_order - b.sort_order,
-        );
+        const items = [...(category.menu_items ?? [])]
+          .filter((item) => item.active)
+          .sort((a, b) => a.sort_order - b.sort_order);
 
         return (
           <section key={category.id}>
