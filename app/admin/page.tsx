@@ -5,7 +5,12 @@ import { Suspense } from "react";
 import { SiteShell } from "../components/site-shell";
 import { createServerSupabaseClient } from "../../lib/supabase/server";
 import { logout } from "../login/actions";
-import { createMenuItem, updateMenuItem } from "./actions";
+import {
+  createCategory,
+  createMenuItem,
+  updateCategory,
+  updateMenuItem,
+} from "./actions";
 
 export const metadata: Metadata = {
   title: "Menu administration",
@@ -18,10 +23,14 @@ export const instant = false;
 async function AdminContent({
   saved,
   created,
+  categorySaved,
+  categoryCreated,
   errorMessage,
 }: {
   saved: boolean;
   created: boolean;
+  categorySaved: boolean;
+  categoryCreated: boolean;
   errorMessage: string | null;
 }) {
   await connection();
@@ -36,8 +45,7 @@ async function AdminContent({
   const email = String(data.claims.email ?? "Administrator");
   const { data: categories, error: categoriesError } = await supabase
     .from("categories")
-    .select("id, name, sort_order")
-    .eq("active", true)
+    .select("id, menu_id, name, description, sort_order, active")
     .order("sort_order");
   const { data: items, error } = await supabase
     .from("menu_items")
@@ -77,6 +85,18 @@ async function AdminContent({
             </p>
           )}
 
+          {categorySaved && (
+            <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">
+              Category saved successfully.
+            </p>
+          )}
+
+          {categoryCreated && (
+            <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">
+              New category created successfully.
+            </p>
+          )}
+
           {errorMessage && (
             <p className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-900">
               {errorMessage}
@@ -89,6 +109,59 @@ async function AdminContent({
             </p>
           ) : (
             <div className="mt-6 space-y-8">
+              <section className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm sm:p-8">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#a3472f]">Categories</p>
+                  <h3 className="mt-2 text-xl font-semibold">Organize the master menu</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#52615b]">Disabled categories stay here for editing but are hidden from the public menu.</p>
+                </div>
+
+                <div className="mt-6 space-y-5">
+                  {(categories ?? []).map((category) => (
+                    <form action={updateCategory} className="rounded-2xl border border-black/10 bg-[#faf9f6] p-5" key={category.id}>
+                      <input name="categoryId" type="hidden" value={category.id} />
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <label className="text-sm font-semibold text-[#27332e]">
+                          Category name
+                          <input className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15" defaultValue={category.name} name="name" required />
+                        </label>
+                        <label className="text-sm font-semibold text-[#27332e]">
+                          Description
+                          <input className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15" defaultValue={category.description ?? ""} name="description" />
+                        </label>
+                      </div>
+                      <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <label className="flex items-center gap-3 text-sm font-semibold text-[#27332e]">
+                          <input className="h-4 w-4 accent-[#a3472f]" defaultChecked={category.active} name="active" type="checkbox" />
+                          Show category on the menu
+                        </label>
+                        <button className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold hover:border-black/30" type="submit">Save category</button>
+                      </div>
+                    </form>
+                  ))}
+                </div>
+
+                {categories?.[0]?.menu_id && (
+                  <form action={createCategory} className="mt-6 rounded-2xl border border-dashed border-[#a3472f]/40 bg-[#fffaf7] p-5">
+                    <input name="menuId" type="hidden" value={categories[0].menu_id} />
+                    <p className="font-semibold">Add a category</p>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <label className="text-sm font-semibold text-[#27332e]">
+                        Category name
+                        <input className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15" name="name" required />
+                      </label>
+                      <label className="text-sm font-semibold text-[#27332e]">
+                        Description
+                        <input className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15" name="description" />
+                      </label>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <button className="rounded-full bg-[#27332e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black" type="submit">Add category</button>
+                    </div>
+                  </form>
+                )}
+              </section>
+
               <form action={createMenuItem} className="rounded-3xl border border-[#a3472f]/25 bg-[#fffaf7] p-6 shadow-sm sm:p-8">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#a3472f]">New item</p>
@@ -103,7 +176,7 @@ async function AdminContent({
                   <label className="text-sm font-semibold text-[#27332e]">
                     Category
                     <select className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15" name="categoryId" required>
-                      {(categories ?? []).map((category) => (
+                      {(categories ?? []).filter((category) => category.active).map((category) => (
                         <option key={category.id} value={category.id}>{category.name}</option>
                       ))}
                     </select>
@@ -145,7 +218,7 @@ async function AdminContent({
                     <label className="text-sm font-semibold text-[#27332e]">
                       Category
                       <select className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15" defaultValue={item.category_id} name="categoryId" required>
-                        {(categories ?? []).map((category) => (
+                        {(categories ?? []).filter((category) => category.active || category.id === item.category_id).map((category) => (
                           <option key={category.id} value={category.id}>{category.name}</option>
                         ))}
                       </select>
@@ -198,12 +271,26 @@ async function AdminContent({
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; created?: string; error?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    created?: string;
+    categorySaved?: string;
+    categoryCreated?: string;
+    error?: string;
+  }>;
 }) {
   const params = await searchParams;
   const errorMessage =
     params.error === "invalid-item"
       ? "Enter a valid item name and price."
+      : params.error === "invalid-category"
+        ? "Enter a category name before saving."
+        : params.error === "invalid-new-category"
+          ? "Enter a name for the new category."
+          : params.error === "category-save-failed"
+            ? "The category could not be saved. Check the Supabase category update policy and try again."
+            : params.error === "category-create-failed"
+              ? "The category could not be created. Check the Supabase category insert policy and try again."
       : params.error === "invalid-new-item"
         ? "Choose a category and enter a valid item name and price."
         : params.error === "create-failed"
@@ -216,7 +303,13 @@ export default async function AdminPage({
     <SiteShell>
       <main className="mx-auto min-h-[70vh] max-w-5xl px-6 py-20 sm:py-24">
         <Suspense fallback={<p className="text-[#68756f]">Loading administration…</p>}>
-          <AdminContent saved={params.saved === "1"} created={params.created === "1"} errorMessage={errorMessage} />
+          <AdminContent
+            saved={params.saved === "1"}
+            created={params.created === "1"}
+            categorySaved={params.categorySaved === "1"}
+            categoryCreated={params.categoryCreated === "1"}
+            errorMessage={errorMessage}
+          />
         </Suspense>
       </main>
     </SiteShell>

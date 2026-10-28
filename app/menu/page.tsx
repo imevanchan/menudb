@@ -66,9 +66,9 @@ async function MenuData() {
     );
   }
 
-  const categories = [...(menu.categories ?? [])].sort(
-    (a, b) => a.sort_order - b.sort_order,
-  );
+  const categories = [...(menu.categories ?? [])]
+    .filter((category) => category.active)
+    .sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <div className="mt-12 space-y-10">

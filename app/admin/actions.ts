@@ -15,6 +15,72 @@ async function requireAuthenticatedUser() {
   return supabase;
 }
 
+export async function createCategory(formData: FormData) {
+  const supabase = await requireAuthenticatedUser();
+  const menuId = String(formData.get("menuId") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!menuId || !name) {
+    redirect("/admin?error=invalid-new-category");
+  }
+
+  const { data: lastCategory, error: orderError } = await supabase
+    .from("categories")
+    .select("sort_order")
+    .eq("menu_id", menuId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (orderError) {
+    console.error("Unable to determine category order:", orderError);
+    redirect("/admin?error=category-create-failed");
+  }
+
+  const { error } = await supabase.from("categories").insert({
+    menu_id: menuId,
+    name,
+    description,
+    sort_order: (lastCategory?.sort_order ?? -1) + 1,
+  });
+
+  if (error) {
+    console.error("Unable to create category:", error);
+    redirect("/admin?error=category-create-failed");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/menu");
+  redirect("/admin?categoryCreated=1");
+}
+
+export async function updateCategory(formData: FormData) {
+  const supabase = await requireAuthenticatedUser();
+  const categoryId = String(formData.get("categoryId") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const active = formData.get("active") === "on";
+
+  if (!categoryId || !name) {
+    redirect("/admin?error=invalid-category");
+  }
+
+  const { error } = await supabase
+    .from("categories")
+    .update({ name, description, active })
+    .eq("id", categoryId);
+
+  if (error) {
+    console.error("Unable to update category:", error);
+    redirect("/admin?error=category-save-failed");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/menu");
+  redirect("/admin?categorySaved=1");
+}
+
 export async function createMenuItem(formData: FormData) {
   const supabase = await requireAuthenticatedUser();
   const categoryId = String(formData.get("categoryId") ?? "").trim();
