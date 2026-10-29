@@ -11,6 +11,7 @@ import {
   updateCategory,
   updateMenuItem,
 } from "./actions";
+import { ModifierEditor } from "./modifier-editor";
 
 export const metadata: Metadata = {
   title: "Menu administration",
@@ -25,12 +26,14 @@ async function AdminContent({
   created,
   categorySaved,
   categoryCreated,
+  modifierSaved,
   errorMessage,
 }: {
   saved: boolean;
   created: boolean;
   categorySaved: boolean;
   categoryCreated: boolean;
+  modifierSaved: boolean;
   errorMessage: string | null;
 }) {
   await connection();
@@ -50,6 +53,28 @@ async function AdminContent({
   const { data: items, error } = await supabase
     .from("menu_items")
     .select("id, category_id, name, description, price_cents, active, sort_order")
+    .order("sort_order");
+  const { data: modifierGroups, error: modifierGroupsError } = await supabase
+    .from("modifier_groups")
+    .select(`
+      id,
+      name,
+      minimum_selections,
+      maximum_selections,
+      active,
+      modifier_options(
+        id,
+        modifier_group_id,
+        name,
+        price_cents,
+        active,
+        sort_order
+      )
+    `)
+    .order("name");
+  const { data: modifierAssignments, error: modifierAssignmentsError } = await supabase
+    .from("menu_item_modifier_groups")
+    .select("menu_item_id, modifier_group_id, sort_order")
     .order("sort_order");
 
   return (
@@ -97,15 +122,21 @@ async function AdminContent({
             </p>
           )}
 
+          {modifierSaved && (
+            <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">
+              Modifier changes saved successfully.
+            </p>
+          )}
+
           {errorMessage && (
             <p className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-900">
               {errorMessage}
             </p>
           )}
 
-          {categoriesError || error ? (
+          {categoriesError || error || modifierGroupsError || modifierAssignmentsError ? (
             <p className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-900">
-              The menu editor could not be loaded: {categoriesError?.message ?? error?.message}
+              The menu editor could not be loaded: {categoriesError?.message ?? error?.message ?? modifierGroupsError?.message ?? modifierAssignmentsError?.message}
             </p>
           ) : (
             <div className="mt-6 space-y-8">
@@ -261,6 +292,12 @@ async function AdminContent({
                   </div>
                 </form>
               ))}
+
+              <ModifierEditor
+                assignments={modifierAssignments ?? []}
+                groups={modifierGroups ?? []}
+                items={(items ?? []).map((item) => ({ id: item.id, name: item.name, active: item.active }))}
+              />
             </div>
           )}
         </section>
@@ -276,6 +313,7 @@ export default async function AdminPage({
     created?: string;
     categorySaved?: string;
     categoryCreated?: string;
+    modifierSaved?: string;
     error?: string;
   }>;
 }) {
@@ -291,6 +329,20 @@ export default async function AdminPage({
             ? "The category could not be saved. Check the Supabase category update policy and try again."
             : params.error === "category-create-failed"
               ? "The category could not be created. Check the Supabase category insert policy and try again."
+              : params.error === "invalid-modifier-group"
+                ? "Enter a modifier-group name and valid minimum and maximum selections."
+                : params.error === "modifier-group-save-failed"
+                  ? "The modifier group could not be saved. Check its Supabase update policy."
+                  : params.error === "invalid-modifier-option"
+                    ? "Enter an option name and a valid added price."
+                    : params.error === "modifier-option-create-failed"
+                      ? "The modifier option could not be created. Check its Supabase insert policy."
+                      : params.error === "modifier-option-save-failed"
+                        ? "The modifier option could not be saved. Check its Supabase update policy."
+                        : params.error === "invalid-modifier-assignment"
+                          ? "Choose both a menu item and modifier group."
+                          : params.error === "modifier-assignment-failed"
+                            ? "The modifier assignment could not be changed. Check the junction-table policies."
       : params.error === "invalid-new-item"
         ? "Choose a category and enter a valid item name and price."
         : params.error === "create-failed"
@@ -308,6 +360,7 @@ export default async function AdminPage({
             created={params.created === "1"}
             categorySaved={params.categorySaved === "1"}
             categoryCreated={params.categoryCreated === "1"}
+            modifierSaved={params.modifierSaved === "1"}
             errorMessage={errorMessage}
           />
         </Suspense>

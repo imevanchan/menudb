@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { SiteShell } from "../components/site-shell";
@@ -90,13 +91,14 @@ async function MenuData() {
             <h3 className="text-xl font-semibold tracking-tight">{category.name}</h3>
             <div className="mt-4 divide-y divide-black/10 rounded-2xl border border-black/10 bg-white px-6 shadow-sm">
               {items.map((item) => (
-                <article className="flex items-start justify-between gap-6 py-6" key={item.id}>
+                <Link className="group flex items-start justify-between gap-6 py-6" href={`/menu/items/${item.id}`} key={item.id}>
                   <div>
                     <h4 className="font-semibold">{item.name}</h4>
                     <p className="mt-1 text-sm leading-6 text-[#68756f]">{item.description}</p>
+                    <p className="mt-2 text-xs font-semibold text-[#a3472f] opacity-0 transition-opacity group-hover:opacity-100">Customize item →</p>
                   </div>
                   <p className="shrink-0 font-semibold">${(item.price_cents / 100).toFixed(2)}</p>
-                </article>
+                </Link>
               ))}
             </div>
           </section>

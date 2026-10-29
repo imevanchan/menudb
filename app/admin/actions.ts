@@ -156,3 +156,219 @@ export async function updateMenuItem(formData: FormData) {
   revalidatePath("/menu");
   redirect("/admin?saved=1");
 }
+
+export async function createModifierGroup(formData: FormData) {
+  const supabase = await requireAuthenticatedUser();
+  const name = String(formData.get("name") ?? "").trim();
+  const minimumSelections = Number(formData.get("minimumSelections"));
+  const maximumSelections = Number(formData.get("maximumSelections"));
+
+  if (
+    !name ||
+    !Number.isInteger(minimumSelections) ||
+    !Number.isInteger(maximumSelections) ||
+    minimumSelections < 0 ||
+    maximumSelections < 1 ||
+    maximumSelections < minimumSelections
+  ) {
+    redirect("/admin?error=invalid-modifier-group");
+  }
+
+  const { error } = await supabase.from("modifier_groups").insert({
+    name,
+    minimum_selections: minimumSelections,
+    maximum_selections: maximumSelections,
+  });
+
+  if (error) {
+    console.error("Unable to create modifier group:", error);
+    redirect("/admin?error=modifier-group-create-failed");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/menu");
+  redirect("/admin?modifierSaved=1");
+}
+
+export async function updateModifierGroup(formData: FormData) {
+  const supabase = await requireAuthenticatedUser();
+  const groupId = String(formData.get("groupId") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const minimumSelections = Number(formData.get("minimumSelections"));
+  const maximumSelections = Number(formData.get("maximumSelections"));
+  const active = formData.get("active") === "on";
+
+  if (
+    !groupId ||
+    !name ||
+    !Number.isInteger(minimumSelections) ||
+    !Number.isInteger(maximumSelections) ||
+    minimumSelections < 0 ||
+    maximumSelections < 1 ||
+    maximumSelections < minimumSelections
+  ) {
+    redirect("/admin?error=invalid-modifier-group");
+  }
+
+  const { error } = await supabase
+    .from("modifier_groups")
+    .update({
+      name,
+      minimum_selections: minimumSelections,
+      maximum_selections: maximumSelections,
+      active,
+    })
+    .eq("id", groupId);
+
+  if (error) {
+    console.error("Unable to update modifier group:", error);
+    redirect("/admin?error=modifier-group-save-failed");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/menu");
+  redirect("/admin?modifierSaved=1");
+}
+
+export async function createModifierOption(formData: FormData) {
+  const supabase = await requireAuthenticatedUser();
+  const groupId = String(formData.get("groupId") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const price = Number(formData.get("price"));
+
+  if (!groupId || !name || !Number.isFinite(price) || price < 0) {
+    redirect("/admin?error=invalid-modifier-option");
+  }
+
+  const { data: lastOption, error: orderError } = await supabase
+    .from("modifier_options")
+    .select("sort_order")
+    .eq("modifier_group_id", groupId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (orderError) {
+    console.error("Unable to determine modifier option order:", orderError);
+    redirect("/admin?error=modifier-option-create-failed");
+  }
+
+  const { error } = await supabase.from("modifier_options").insert({
+    modifier_group_id: groupId,
+    name,
+    price_cents: Math.round(price * 100),
+    sort_order: (lastOption?.sort_order ?? -1) + 1,
+  });
+
+  if (error) {
+    console.error("Unable to create modifier option:", error);
+    redirect("/admin?error=modifier-option-create-failed");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/menu");
+  redirect("/admin?modifierSaved=1");
+}
+
+export async function updateModifierOption(formData: FormData) {
+  const supabase = await requireAuthenticatedUser();
+  const optionId = String(formData.get("optionId") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const price = Number(formData.get("price"));
+  const active = formData.get("active") === "on";
+
+  if (!optionId || !name || !Number.isFinite(price) || price < 0) {
+    redirect("/admin?error=invalid-modifier-option");
+  }
+
+  const { error } = await supabase
+    .from("modifier_options")
+    .update({ name, price_cents: Math.round(price * 100), active })
+    .eq("id", optionId);
+
+  if (error) {
+    console.error("Unable to update modifier option:", error);
+    redirect("/admin?error=modifier-option-save-failed");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/menu");
+  redirect("/admin?modifierSaved=1");
+}
+
+export async function attachModifierGroup(formData: FormData) {
+  const supabase = await requireAuthenticatedUser();
+  const itemId = String(formData.get("itemId") ?? "").trim();
+  const groupId = String(formData.get("groupId") ?? "").trim();
+
+  if (!itemId || !groupId) {
+    redirect("/admin?error=invalid-modifier-assignment");
+  }
+
+  const { data: existing, error: existingError } = await supabase
+    .from("menu_item_modifier_groups")
+    .select("menu_item_id")
+    .eq("menu_item_id", itemId)
+    .eq("modifier_group_id", groupId)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("Unable to check modifier assignment:", existingError);
+    redirect("/admin?error=modifier-assignment-failed");
+  }
+
+  if (!existing) {
+    const { data: lastAssignment, error: orderError } = await supabase
+      .from("menu_item_modifier_groups")
+      .select("sort_order")
+      .eq("menu_item_id", itemId)
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (orderError) {
+      console.error("Unable to determine modifier assignment order:", orderError);
+      redirect("/admin?error=modifier-assignment-failed");
+    }
+
+    const { error } = await supabase.from("menu_item_modifier_groups").insert({
+      menu_item_id: itemId,
+      modifier_group_id: groupId,
+      sort_order: (lastAssignment?.sort_order ?? -1) + 1,
+    });
+
+    if (error) {
+      console.error("Unable to attach modifier group:", error);
+      redirect("/admin?error=modifier-assignment-failed");
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/menu");
+  redirect("/admin?modifierSaved=1");
+}
+
+export async function detachModifierGroup(formData: FormData) {
+  const supabase = await requireAuthenticatedUser();
+  const itemId = String(formData.get("itemId") ?? "").trim();
+  const groupId = String(formData.get("groupId") ?? "").trim();
+
+  if (!itemId || !groupId) {
+    redirect("/admin?error=invalid-modifier-assignment");
+  }
+
+  const { error } = await supabase
+    .from("menu_item_modifier_groups")
+    .delete()
+    .eq("menu_item_id", itemId)
+    .eq("modifier_group_id", groupId);
+
+  if (error) {
+    console.error("Unable to detach modifier group:", error);
+    redirect("/admin?error=modifier-assignment-failed");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/menu");
+  redirect("/admin?modifierSaved=1");
+}
