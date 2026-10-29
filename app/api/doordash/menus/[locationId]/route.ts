@@ -1,3 +1,9 @@
+import { createServerSupabaseClient } from "../../../../../lib/supabase/server";
+import {
+  DoorDashLocationRecord,
+  toDoorDashMenu,
+} from "../../../../../lib/integrations/doordash/menu";
+
 export async function GET(
   request: Request,
   context: {
@@ -30,53 +36,73 @@ export async function GET(
     requestedMenuIds,
   });
 
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("locations")
+    .select(`
+      merchant_supplied_id,
+      menus(
+        id,
+        name,
+        description,
+        active,
+        categories(
+          id,
+          name,
+          description,
+          active,
+          sort_order,
+          menu_items(
+            id,
+            name,
+            description,
+            price_cents,
+            active,
+            sort_order,
+            menu_item_modifier_groups(
+              sort_order,
+              modifier_groups(
+                id,
+                name,
+                minimum_selections,
+                maximum_selections,
+                active,
+                modifier_options(
+                  id,
+                  name,
+                  price_cents,
+                  active,
+                  sort_order
+                )
+              )
+            )
+          )
+        )
+      )
+    `)
+    .eq("merchant_supplied_id", locationId)
+    .eq("active", true)
+    .single();
+
+  if (error || !data) {
+    console.error("Unable to load DoorDash menu location:", error);
+    return Response.json(
+      { error: "Location not found" },
+      { status: error?.code === "PGRST116" ? 404 : 500 },
+    );
+  }
+
+  const location = data as unknown as DoorDashLocationRecord;
+  const activeMenus = (location.menus ?? []).filter((menu) => menu.active);
+
   return Response.json({
     store: {
       merchant_supplied_id: locationId,
       provider_type:
         process.env.DOORDASH_PROVIDER_TYPE,
     },
-    menus: [
-      {
-        ...(requestedMenuId
-          ? { id: requestedMenuId }
-          : {}),
-        reference: "test-menu-v1",
-        open_hours: [
-          {
-            day_index: "THU",
-            start_time: "11:00",
-            end_time: "21:00",
-          },
-        ],
-        special_hours: [],
-        menu: {
-          name: "Test Menu",
-          subtitle: "",
-          merchant_supplied_id: "test-menu-001",
-          active: true,
-          categories: [
-            {
-              name: "Combos",
-              subtitle: "",
-              merchant_supplied_id: "combos",
-              active: true,
-              sort_id: 0,
-              items: [
-                {
-                  name: "Test Sesame Chicken",
-                  description: "Sandbox menu item",
-                  merchant_supplied_id:
-                    "test-sesame-chicken",
-                  active: true,
-                  price: 1299,
-                  extras: [],
-                },
-              ],
-            },
-          ],
-        },
-      },
-    ],
+    menus: activeMenus.map((menu) =>
+      toDoorDashMenu(menu, requestedMenuId),
+    ),
   });
 }
