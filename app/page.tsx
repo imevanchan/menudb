@@ -17,8 +17,8 @@ export default function Home() {
           </div>
           <aside className="self-end rounded-3xl bg-[#dce8dc] p-7">
             <p className="text-sm font-semibold text-[#315444]">Current stage</p>
-            <p className="mt-3 text-2xl font-semibold tracking-tight">Sandbox development</p>
-            <p className="mt-3 leading-7 text-[#52615b]">DoorDash test endpoints are connected. Additional platform integrations and the master-menu editor are still in development.</p>
+            <p className="mt-3 text-2xl font-semibold tracking-tight">Sandbox prototype complete</p>
+            <p className="mt-3 leading-7 text-[#52615b]">The protected master-menu editor powers a DoorDash-compatible endpoint with live categories, items, prices, and modifiers.</p>
           </aside>
         </section>
       </main>
