@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "uber:sandbox": "node --env-file=.env.local scripts/uber-sandbox.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

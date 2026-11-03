@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 const platforms = [
   { name: "DoorDash", environment: "Marketplace sandbox", status: "Adapter ready", tone: "border-emerald-200 bg-emerald-50 text-emerald-900", details: "The master menu is transformed into an authenticated DoorDash Menu Pull response. Live transmission is blocked pending Marketplace activation and a test store." },
-  { name: "Uber Eats", environment: "Sandbox", status: "Environment available", tone: "border-amber-200 bg-amber-50 text-amber-950", details: "The sandbox credential can support a future adapter. It is not represented as complete until its menu contract is implemented and tested." },
+  { name: "Uber Eats", environment: "Sandbox", status: "Upload verified", tone: "border-emerald-200 bg-emerald-50 text-emerald-900", details: "The master menu is converted into Uber format, validated, and uploaded to the sandbox. Retrieval confirmed matching items, prices, modifiers, categories, and hours. Live production access is not enabled." },
   { name: "Grubhub", environment: "Public preproduction", status: "Environment available", tone: "border-amber-200 bg-amber-50 text-amber-950", details: "The preproduction API can support a future adapter. Supabase remains the platform-neutral source of truth." },
 ];
 
