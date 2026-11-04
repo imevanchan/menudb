@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { createServerSupabaseClient } from "../../../../../lib/supabase/server";
 import { validateUberMenu } from "../../../../../lib/integrations/uber/validation";
 import {
@@ -6,6 +7,7 @@ import {
 } from "../../../../../lib/integrations/uber/menu";
 
 export async function GET() {
+  await connection();
   try {
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 const platforms = [
   { name: "DoorDash", environment: "Marketplace sandbox", status: "Adapter ready", tone: "border-emerald-200 bg-emerald-50 text-emerald-900", details: "The master menu is transformed into an authenticated DoorDash Menu Pull response. Live transmission is blocked pending Marketplace activation and a test store." },
   { name: "Uber Eats", environment: "Sandbox", status: "Upload verified", tone: "border-emerald-200 bg-emerald-50 text-emerald-900", details: "The master menu is converted into Uber format, validated, and uploaded to the sandbox. Retrieval confirmed matching items, prices, modifiers, categories, and hours. Live production access is not enabled." },
-  { name: "Grubhub", environment: "Public preproduction", status: "Environment available", tone: "border-amber-200 bg-amber-50 text-amber-950", details: "The preproduction API can support a future adapter. Supabase remains the platform-neutral source of truth." },
+  { name: "Grubhub", environment: "Preproduction access required", status: "Access not configured", tone: "border-amber-200 bg-amber-50 text-amber-950", details: "No credentials or test merchant have been issued. The Grubhub adapter is not implemented; integration testing requires access from Grubhub." },
 ];
 
 export default function StatusPage() {
@@ -32,7 +32,7 @@ export default function StatusPage() {
         <section className="mt-10 rounded-3xl bg-[#dce8dc] p-7 sm:p-9">
           <h2 className="text-2xl font-semibold">Demonstrated data flow</h2>
           <p className="mt-4 font-mono text-sm leading-7 text-[#315444]">Admin editor → Supabase master menu → Platform adapter → Authenticated sandbox endpoint</p>
-          <p className="mt-4 max-w-3xl leading-7 text-[#52615b]">Platform transmission is intentionally separate from transformation. A real transport can be enabled later without redesigning the editor or database.</p>
+          <p className="mt-4 max-w-3xl leading-7 text-[#52615b]">Uber sandbox publishing includes a saved backup and a read-back comparison. DoorDash supports an authenticated menu response; its platform exchange still awaits test-store access.</p>
         </section>
       </main>
     </SiteShell>

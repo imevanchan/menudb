@@ -1,3 +1,8 @@
+import { connection } from "next/server";
+import { createServerSupabaseClient } from "../../../../lib/supabase/server";
+import { assertSandbox } from "../../../../lib/integrations/uber/transport";
+import { uberConfig } from "../../../../lib/integrations/uber/config";
+
 async function getUberAccessToken() {
   const clientId = process.env.UBER_CLIENT_ID;
   const clientSecret = process.env.UBER_CLIENT_SECRET;
@@ -9,6 +14,8 @@ async function getUberAccessToken() {
 
   const response = await fetch(authUrl, {
     method: "POST",
+    redirect: "error",
+    signal: AbortSignal.timeout(10_000),
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
@@ -24,7 +31,7 @@ async function getUberAccessToken() {
   const data = await response.json();
 
   if (!response.ok || !data.access_token) {
-    console.error("Uber token request failed:", response.status, data);
+    console.error("Uber token request failed:", response.status);
     throw new Error("Unable to authenticate with Uber.");
   }
 
@@ -32,7 +39,12 @@ async function getUberAccessToken() {
 }
 
 export async function GET() {
+  await connection();
   try {
+    const supabase = await createServerSupabaseClient();
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return Response.json({ error: "Sign in to retrieve the Uber sandbox menu." }, { status: 401 });
+    assertSandbox(uberConfig());
     const apiBaseUrl = process.env.UBER_API_BASE_URL;
     const storeId = process.env.UBER_STORE_ID;
 
@@ -52,6 +64,8 @@ export async function GET() {
           Authorization: `Bearer ${accessToken}`,
         },
         cache: "no-store",
+        redirect: "error",
+        signal: AbortSignal.timeout(10_000),
       },
     );
 

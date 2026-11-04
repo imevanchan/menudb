@@ -14,6 +14,7 @@ The project intentionally does not claim live marketplace access. DoorDash Marke
 - A public menu and item-customization flow
 - DoorDash Marketplace Menu Pull response generation
 - Uber Eats sandbox authentication, menu preview, full upload, and verified retrieval
+- Dashboard publishing with a private database backup, persistent attempt history, and read-back verification
 - Authenticated webhook endpoints for orders, menu status, and menu requests
 - Platform adapters that share the master database; Grubhub remains a future integration
 - Vercel deployment and GitHub-based delivery
@@ -70,6 +71,7 @@ UBER_CLIENT_SECRET=
 UBER_STORE_ID=
 UBER_AUTH_URL=https://sandbox-login.uber.com/oauth/v2/token
 UBER_API_BASE_URL=https://test-api.uber.com
+UBER_SANDBOX_PUBLISH_ENABLED=false
 ```
 
 Never commit `.env.local` or real credentials.
@@ -94,7 +96,7 @@ npm test
 npm run build -- --webpack
 ```
 
-The contract test verifies that active master-menu records map into DoorDash categories, items, integer-cent prices, modifier groups, and modifier options while inactive records are excluded.
+Tests cover menu transformations, production-host rejection, backup-before-upload ordering, timeouts, platform rejection, and read-back comparison. No tests send real platform uploads.
 
 ## DoorDash Menu Pull
 
@@ -137,8 +139,18 @@ npm run uber:sandbox
 npm run uber:sandbox -- --upload
 ```
 
-The first command checks the preview without calling Uber. The second obtains a sandbox token, saves the existing menu under the Git-ignored `sandbox-backups/` directory, and replaces the sandbox menu. Production URLs and redirects are refused. Never change this command to target a live merchant for a portfolio demonstration.
+The first command checks the preview without calling Uber. The second obtains a sandbox token, saves the existing menu under the Git-ignored `sandbox-backups/` directory, and replaces the sandbox menu. Production URLs and redirects are refused. The standalone CLI predates the dashboard history; do not run both concurrently.
 
-An upload returned HTTP 204, and a subsequent read-only retrieval returned HTTP 200. Comparison with the saved submission confirmed menu names, category relationships, item prices, modifier rules, and hours. This is an on-demand sync command, not automatic publishing after every editor change.
+An upload returned HTTP 204, and a subsequent read-only retrieval returned HTTP 200. Comparison with the saved submission confirmed menu names, category relationships, item prices, modifier rules, and hours. Publishing is explicit rather than automatic after each editor change.
 
 Configured hours: Tuesday–Thursday 11:00–21:00, Friday–Saturday 11:00–22:00; Monday and Sunday closed.
+
+## Dashboard publishing and project handoff
+
+Follow [publishing setup and deployment](docs/DEPLOYMENT.md) to apply `supabase/migrations/202611040001_publishing.sql`, approve the intended administrator, and enable server-side publishing. Until setup is complete, the admin panel displays the missing configuration and disables its publish button. An existing signed-in session is required to retrieve `/api/uber/menu`.
+
+The dashboard records each attempt before contacting Uber, persists the prior menu before upload, and marks success only after read-back matches the managed menu fields. A database unique index prevents overlapping dashboard jobs. Interrupted attempts can be rechecked after five minutes without another upload. A fingerprint identifies whether saved changes differ from the last verified dashboard publish. These records describe this single-location sandbox demonstration, not a tamper-proof audit system.
+
+The schema and dashboard workflow require deployment validation after the migration; earlier CLI upload verification does not prove that the new history policies work. No synthetic success records are inserted.
+
+See the [portfolio demo and architecture](docs/DEMO.md) for a walkthrough, screenshot plan, and resume wording.

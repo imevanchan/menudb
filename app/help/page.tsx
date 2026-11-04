@@ -7,6 +7,9 @@ export const metadata: Metadata = {
 };
 
 const topics = [
+  ["Publish a saved menu", "Sign in to Admin, save your edits, and review the Uber Eats sandbox publishing panel. Confirm replacement of the test menu and choose Publish to Uber sandbox. The result and recent attempts appear in the panel."],
+  ["Publishing is unavailable", "Publishing requires an approved administrator, the publishing database migration, and Uber sandbox settings on the server. Your saved menu remains editable while publishing is unavailable."],
+  ["An upload result is unknown", "A timeout can happen after Uber receives an upload. Review the stored sandbox menu and the history record before retrying. MenuDB blocks overlapping or unresolved publishing attempts."],
   ["A menu update does not appear", "Confirm that the correct sandbox store and menu are selected, then review the platform response for a validation error. Some updates may take time to process."],
   ["A webhook is rejected", "Confirm that the endpoint URL is public, uses HTTPS, and that its authorization value exactly matches the value configured for that webhook."],
   ["An endpoint returns Unauthorized", "Check the corresponding environment variable in Vercel, redeploy after changing it, and make sure the request includes the expected Authorization header."],

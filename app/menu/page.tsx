@@ -114,7 +114,7 @@ export default function MenuPage() {
       <main className="mx-auto min-h-[70vh] max-w-4xl px-6 py-20 sm:py-24">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#a3472f]">Database connection</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">Master menu</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-[#52615b]">This page reads the current menu directly from Supabase. Editing controls will be added after authentication.</p>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-[#52615b]">Explore the saved master menu and customize an item to preview its options. Administrators can edit the menu and publish updates to the Uber Eats sandbox.</p>
         <Suspense fallback={<p className="mt-12 text-[#68756f]">Loading the menu…</p>}>
           <MenuData />
         </Suspense>

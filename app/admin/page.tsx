@@ -12,6 +12,7 @@ import {
   updateMenuItem,
 } from "./actions";
 import { ModifierEditor } from "./modifier-editor";
+import { PublishingPanel } from "./publishing-panel";
 
 export const metadata: Metadata = {
   title: "Menu administration",
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 
 // Authentication depends on request cookies and token-expiration time.
 export const instant = false;
+export const maxDuration = 60;
 
 async function AdminContent({
   saved,
@@ -89,6 +91,7 @@ async function AdminContent({
             <button className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold hover:border-black/30" type="submit">Sign out</button>
           </form>
         </div>
+        <PublishingPanel />
         <section className="mt-12">
           <div className="flex items-end justify-between gap-6">
             <div>

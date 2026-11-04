@@ -7,7 +7,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <header className="border-b border-black/10 bg-[#f7f5f0]/95">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
           <Link href="/" className="text-xl font-semibold tracking-tight">MenuDB</Link>
-          <nav className="flex gap-5 text-sm text-[#52615b]" aria-label="Main navigation">
+          <nav className="flex flex-wrap justify-end gap-x-5 gap-y-2 text-sm text-[#52615b]" aria-label="Main navigation">
             <Link className="transition-colors hover:text-[#18201d]" href="/menu">Menu</Link>
             <Link className="transition-colors hover:text-[#18201d]" href="/status">Status</Link>
             <Link className="transition-colors hover:text-[#18201d]" href="/onboarding">Onboarding</Link>
