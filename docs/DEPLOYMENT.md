@@ -7,7 +7,8 @@
 - Local signed-in dashboard publish completed with “Published to Uber sandbox and verified by retrieval.”
 - Application build, TypeScript, lint, and 11 automated checks passed.
 - Vercel deployed the publishing implementation; its public status page reflects the updated platform labels.
-- The six Uber environment settings were saved in Vercel Production. A fresh deployment and signed-in publishing test complete hosted verification.
+- The six Uber environment settings were saved in Vercel Production and a fresh deployment completed successfully.
+- The hosted dashboard correctly skipped an unchanged, already verified version. After saving an item description change, its publish returned “Published to Uber sandbox and verified by retrieval.”
 
 ## 1. Apply the database migration
 
