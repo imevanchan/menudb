@@ -17,6 +17,10 @@ Captured from the deployed application:
 
 ![Integration status](screenshots/integration-status.jpg)
 
+![Master menu](screenshots/master-menu.jpg)
+
+![Item customization with the modifier price included](screenshots/item-customization.jpg)
+
 - Public menu with categories and prices.
 - Item customization with modifier choices.
 - Admin publishing panel after a verified attempt, including its history.
