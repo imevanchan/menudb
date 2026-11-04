@@ -24,7 +24,7 @@ Screenshots should capture actual results. The history table starts empty; earli
 
 Built a Next.js and TypeScript menu-management application with Supabase authentication and row-level security; implemented platform menu adapters and verified Uber Eats sandbox publishing with backups, read-back validation, and persistent sync history.
 
-Use the full wording after the database migration and dashboard publishing have been tested. Before then, describe dashboard publishing and history as implemented but awaiting deployment verification. Do not claim production marketplace access or automatic three-platform synchronization.
+The database migration and local dashboard publish were tested successfully on November 4, 2026. Hosted publishing requires the same environment settings and a signed-in test on Vercel. Do not claim production marketplace access or automatic three-platform synchronization.
 
 ## Architecture
 

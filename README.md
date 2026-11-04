@@ -151,6 +151,6 @@ Follow [publishing setup and deployment](docs/DEPLOYMENT.md) to apply `supabase/
 
 The dashboard records each attempt before contacting Uber, persists the prior menu before upload, and marks success only after read-back matches the managed menu fields. A database unique index prevents overlapping dashboard jobs. Interrupted attempts can be rechecked after five minutes without another upload. A fingerprint identifies whether saved changes differ from the last verified dashboard publish. These records describe this single-location sandbox demonstration, not a tamper-proof audit system.
 
-The schema and dashboard workflow require deployment validation after the migration; earlier CLI upload verification does not prove that the new history policies work. No synthetic success records are inserted.
+The publishing migration was applied and the local dashboard completed a publish with the result “Published to Uber sandbox and verified by retrieval.” Anonymous REST requests to both publishing tables were denied. The public Vercel pages are deployed; hosted publishing still requires the Uber environment settings and a signed-in end-to-end check. No synthetic success records are inserted.
 
 See the [portfolio demo and architecture](docs/DEMO.md) for a walkthrough, screenshot plan, and resume wording.

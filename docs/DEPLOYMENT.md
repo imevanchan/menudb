@@ -1,5 +1,14 @@
 # Publishing setup and deployment
 
+## Verification record
+
+- November 4, 2026: publishing migration applied to the hosted Supabase project.
+- Anonymous REST access to publisher membership and sync history denied (HTTP 401, Postgres code 42501).
+- Local signed-in dashboard publish completed with “Published to Uber sandbox and verified by retrieval.”
+- Application build, TypeScript, lint, and 11 automated checks passed.
+- Vercel deployed the publishing implementation; its public status page reflects the updated platform labels.
+- Hosted dashboard publishing requires its server environment settings and a signed-in publishing test.
+
 ## 1. Apply the database migration
 
 Open the existing Supabase MenuDB project → SQL Editor → New query. Paste and run the contents of `supabase/migrations/202611040001_publishing.sql` once.

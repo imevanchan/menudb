@@ -18,7 +18,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );
-          Object.entries(headers).forEach(([key, value]) =>
+          Object.entries(headers ?? {}).forEach(([key, value]) =>
             response.headers.set(key, value),
           );
         },
@@ -33,14 +33,20 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
+    redirectResponse.headers.set("Cache-Control", "private, no-store");
+    return redirectResponse;
   }
 
   if (isAuthenticated && request.nextUrl.pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/admin";
     url.search = "";
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
+    redirectResponse.headers.set("Cache-Control", "private, no-store");
+    return redirectResponse;
   }
 
   return response;
