@@ -7,7 +7,7 @@
 - Local signed-in dashboard publish completed with “Published to Uber sandbox and verified by retrieval.”
 - Application build, TypeScript, lint, and 11 automated checks passed.
 - Vercel deployed the publishing implementation; its public status page reflects the updated platform labels.
-- Hosted dashboard publishing requires its server environment settings and a signed-in publishing test.
+- The six Uber environment settings were saved in Vercel Production. A fresh deployment and signed-in publishing test complete hosted verification.
 
 ## 1. Apply the database migration
 

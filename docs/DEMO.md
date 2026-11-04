@@ -13,6 +13,10 @@ Use only synthetic test data in a public recording. Keep sign-in, passwords, env
 
 ## Suggested screenshots
 
+Captured from the deployed application:
+
+![Integration status](screenshots/integration-status.jpg)
+
 - Public menu with categories and prices.
 - Item customization with modifier choices.
 - Admin publishing panel after a verified attempt, including its history.
