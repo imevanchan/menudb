@@ -10,18 +10,22 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <nav className="flex flex-wrap justify-end gap-x-5 gap-y-2 text-sm text-[#52615b]" aria-label="Main navigation">
             <Link className="transition-colors hover:text-[#18201d]" href="/menu">Menu</Link>
             <Link className="transition-colors hover:text-[#18201d]" href="/status">Status</Link>
-            <Link className="transition-colors hover:text-[#18201d]" href="/onboarding">Onboarding</Link>
-            <Link className="transition-colors hover:text-[#18201d]" href="/help">Help</Link>
-            <Link className="transition-colors hover:text-[#18201d]" href="/privacy">Privacy</Link>
             <Link className="transition-colors hover:text-[#18201d]" href="/admin">Admin</Link>
           </nav>
         </div>
       </header>
       {children}
       <footer className="border-t border-black/10">
-        <div className="mx-auto flex max-w-5xl flex-col gap-2 px-6 py-8 text-sm text-[#68756f] sm:flex-row sm:items-center sm:justify-between">
-          <p>MenuDB is operated by 1333 Desiree Wok LLC.</p>
-          <p>Single-location menu integration prototype.</p>
+        <div className="mx-auto flex max-w-5xl flex-col gap-5 px-6 py-8 text-sm text-[#68756f] sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <p>MenuDB is operated by 1333 Desiree Wok LLC.</p>
+            <p>Single-location menu integration prototype.</p>
+          </div>
+          <nav className="flex flex-wrap gap-x-5 gap-y-2" aria-label="Footer navigation">
+            <Link className="transition-colors hover:text-[#18201d]" href="/onboarding">Onboarding</Link>
+            <Link className="transition-colors hover:text-[#18201d]" href="/help">Help</Link>
+            <Link className="transition-colors hover:text-[#18201d]" href="/privacy">Privacy</Link>
+          </nav>
         </div>
       </footer>
     </div>

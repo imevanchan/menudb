@@ -9,10 +9,12 @@ import {
   createCategory,
   createMenuItem,
   updateCategory,
-  updateMenuItem,
 } from "./actions";
 import { ModifierEditor } from "./modifier-editor";
 import { PublishingPanel } from "./publishing-panel";
+import { DraftGuard } from "./draft-guard";
+import { ItemsEditor } from "./items-editor";
+import { SubmitButton } from "./submit-button";
 
 export const metadata: Metadata = {
   title: "Menu administration",
@@ -79,8 +81,18 @@ async function AdminContent({
     .select("menu_item_id, modifier_group_id, sort_order")
     .order("sort_order");
 
+  let menuId = categories?.[0]?.menu_id;
+  if (!menuId && !categoriesError) {
+    const { data: menu } = await supabase.from("menus")
+      .select("id, locations!inner(merchant_supplied_id)")
+      .eq("locations.merchant_supplied_id", "test-location").eq("active", true).single();
+    menuId = menu?.id;
+  }
+
+  const successMessage = saved ? "Menu item saved." : created ? "New menu item added." : categorySaved ? "Category saved." : categoryCreated ? "New category added." : modifierSaved ? "Modifier changes saved." : null;
+
   return (
-    <>
+    <DraftGuard>
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#a3472f]">Authenticated</p>
@@ -91,59 +103,26 @@ async function AdminContent({
             <button className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold hover:border-black/30" type="submit">Sign out</button>
           </form>
         </div>
+        {successMessage && <p role="status" className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">{successMessage} Review the saved menu before publishing.</p>}
+        {errorMessage && <p role="alert" className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-900">{errorMessage}</p>}
         <PublishingPanel />
         <section className="mt-12">
           <div className="flex items-end justify-between gap-6">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#a3472f]">Master menu</p>
               <h2 className="mt-3 text-2xl font-semibold tracking-tight">Edit menu items</h2>
-              <p className="mt-2 text-[#52615b]">Changes saved here are written directly to Supabase.</p>
+              <p className="mt-2 text-[#52615b]">Save your edits here, then review and publish them above. Saving does not publish automatically.</p>
             </div>
           </div>
 
-          {saved && (
-            <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">
-              Menu item saved successfully.
-            </p>
-          )}
-
-          {created && (
-            <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">
-              New menu item created successfully.
-            </p>
-          )}
-
-          {categorySaved && (
-            <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">
-              Category saved successfully.
-            </p>
-          )}
-
-          {categoryCreated && (
-            <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">
-              New category created successfully.
-            </p>
-          )}
-
-          {modifierSaved && (
-            <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-900">
-              Modifier changes saved successfully.
-            </p>
-          )}
-
-          {errorMessage && (
-            <p className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-900">
-              {errorMessage}
-            </p>
-          )}
-
           {categoriesError || error || modifierGroupsError || modifierAssignmentsError ? (
             <p className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-900">
-              The menu editor could not be loaded: {categoriesError?.message ?? error?.message ?? modifierGroupsError?.message ?? modifierAssignmentsError?.message}
+              The menu editor could not load. Refresh this page and try again. Your saved menu is still in the database.
             </p>
           ) : (
             <div className="mt-6 space-y-8">
-              <section className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm sm:p-8">
+              <details open={!categories?.length} className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm sm:p-8">
+                <summary className="cursor-pointer font-semibold">Manage categories <span className="ml-2 text-sm font-normal text-[#68756f]">{categories?.length ?? 0} {categories?.length === 1 ? "category" : "categories"}</span></summary>
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#a3472f]">Categories</p>
                   <h3 className="mt-2 text-xl font-semibold">Organize the master menu</h3>
@@ -169,15 +148,17 @@ async function AdminContent({
                           <input className="h-4 w-4 accent-[#a3472f]" defaultChecked={category.active} name="active" type="checkbox" />
                           Show category on the menu
                         </label>
-                        <button className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold hover:border-black/30" type="submit">Save category</button>
+                        <SubmitButton className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold hover:border-black/30">Save category</SubmitButton>
                       </div>
                     </form>
                   ))}
                 </div>
 
-                {categories?.[0]?.menu_id && (
+                {!categories?.length && <p className="mt-4 text-sm text-[#68756f]">Start with a category such as Appetizers or Combos, then add items to it.</p>}
+                {!menuId && <p className="mt-3 text-sm text-amber-900">No active master menu could be found. Check the menu setup before adding categories.</p>}
+                {menuId && (
                   <form action={createCategory} className="mt-6 rounded-2xl border border-dashed border-[#a3472f]/40 bg-[#fffaf7] p-5">
-                    <input name="menuId" type="hidden" value={categories[0].menu_id} />
+                    <input name="menuId" type="hidden" value={menuId} />
                     <p className="font-semibold">Add a category</p>
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       <label className="text-sm font-semibold text-[#27332e]">
@@ -190,12 +171,14 @@ async function AdminContent({
                       </label>
                     </div>
                     <div className="mt-4 flex justify-end">
-                      <button className="rounded-full bg-[#27332e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black" type="submit">Add category</button>
+                      <SubmitButton pendingLabel="Adding…" className="rounded-full bg-[#27332e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black">Add category</SubmitButton>
                     </div>
                   </form>
                 )}
-              </section>
+              </details>
 
+              <details className="rounded-3xl border border-[#a3472f]/25 bg-[#fffaf7]">
+              <summary className="cursor-pointer px-6 py-5 font-semibold sm:px-8">Add a menu item</summary>
               <form action={createMenuItem} className="rounded-3xl border border-[#a3472f]/25 bg-[#fffaf7] p-6 shadow-sm sm:p-8">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#a3472f]">New item</p>
@@ -230,71 +213,13 @@ async function AdminContent({
                 </label>
 
                 <div className="mt-5 flex justify-end">
-                  <button className="rounded-full bg-[#a3472f] px-6 py-3 text-sm font-semibold text-white hover:bg-[#873923]" type="submit">Add item</button>
+                  <SubmitButton pendingLabel="Adding…" disabled={!(categories ?? []).some((category) => category.active)} className="rounded-full bg-[#a3472f] px-6 py-3 text-sm font-semibold text-white hover:bg-[#873923]">Add item</SubmitButton>
                 </div>
+                {!(categories ?? []).some((category) => category.active) && <p className="mt-3 text-sm text-amber-900">Create or enable a category before adding an item.</p>}
               </form>
+              </details>
 
-              {(items ?? []).map((item) => (
-                <form action={updateMenuItem} className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm sm:p-8" key={item.id}>
-                  <input name="itemId" type="hidden" value={item.id} />
-
-                  <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                    <label className="text-sm font-semibold text-[#27332e]">
-                      Item name
-                      <input
-                        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15"
-                        defaultValue={item.name}
-                        name="name"
-                        required
-                      />
-                    </label>
-
-                    <label className="text-sm font-semibold text-[#27332e]">
-                      Category
-                      <select className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15" defaultValue={item.category_id} name="categoryId" required>
-                        {(categories ?? []).filter((category) => category.active || category.id === item.category_id).map((category) => (
-                          <option key={category.id} value={category.id}>{category.name}</option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="text-sm font-semibold text-[#27332e]">
-                      Price
-                      <div className="relative mt-2">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-normal text-[#68756f]">$</span>
-                        <input
-                          className="w-full rounded-xl border border-black/15 bg-white py-3 pl-8 pr-4 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15"
-                          defaultValue={(item.price_cents / 100).toFixed(2)}
-                          min="0"
-                          name="price"
-                          required
-                          step="0.01"
-                          type="number"
-                        />
-                      </div>
-                    </label>
-                  </div>
-
-                  <label className="mt-5 block text-sm font-semibold text-[#27332e]">
-                    Description
-                    <textarea
-                      className="mt-2 min-h-28 w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-normal outline-none focus:border-[#a3472f] focus:ring-2 focus:ring-[#a3472f]/15"
-                      defaultValue={item.description ?? ""}
-                      name="description"
-                    />
-                  </label>
-
-                  <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <label className="flex items-center gap-3 text-sm font-semibold text-[#27332e]">
-                      <input className="h-4 w-4 accent-[#a3472f]" defaultChecked={item.active} name="active" type="checkbox" />
-                      Available to customers
-                    </label>
-                    <button className="rounded-full bg-[#a3472f] px-6 py-3 text-sm font-semibold text-white hover:bg-[#873923]" type="submit">
-                      Save item
-                    </button>
-                  </div>
-                </form>
-              ))}
+              <ItemsEditor categories={categories ?? []} items={items ?? []} />
 
               <ModifierEditor
                 assignments={modifierAssignments ?? []}
@@ -304,7 +229,7 @@ async function AdminContent({
             </div>
           )}
         </section>
-    </>
+    </DraftGuard>
   );
 }
 
@@ -329,29 +254,31 @@ export default async function AdminPage({
         : params.error === "invalid-new-category"
           ? "Enter a name for the new category."
           : params.error === "category-save-failed"
-            ? "The category could not be saved. Check the Supabase category update policy and try again."
+            ? "The category could not be saved. Refresh to check its saved values, then try again."
             : params.error === "category-create-failed"
-              ? "The category could not be created. Check the Supabase category insert policy and try again."
+              ? "The category could not be created. Refresh to check the category list, then try again."
               : params.error === "invalid-modifier-group"
                 ? "Enter a modifier-group name and valid minimum and maximum selections."
                 : params.error === "modifier-group-save-failed"
-                  ? "The modifier group could not be saved. Check its Supabase update policy."
+                  ? "The modifier group could not be saved. Refresh to check its saved values, then try again."
+                  : params.error === "modifier-group-create-failed"
+                    ? "The modifier group could not be added. Refresh to check the group list, then try again."
                   : params.error === "invalid-modifier-option"
                     ? "Enter an option name and a valid added price."
                     : params.error === "modifier-option-create-failed"
-                      ? "The modifier option could not be created. Check its Supabase insert policy."
+                      ? "The option could not be added. Refresh to check the option list, then try again."
                       : params.error === "modifier-option-save-failed"
-                        ? "The modifier option could not be saved. Check its Supabase update policy."
+                        ? "The option could not be saved. Refresh to check its saved values, then try again."
                         : params.error === "invalid-modifier-assignment"
                           ? "Choose both a menu item and modifier group."
                           : params.error === "modifier-assignment-failed"
-                            ? "The modifier assignment could not be changed. Check the junction-table policies."
+                            ? "The item’s modifier assignment could not be changed. Refresh to check its choices, then try again."
       : params.error === "invalid-new-item"
         ? "Choose a category and enter a valid item name and price."
         : params.error === "create-failed"
-          ? "The new item could not be created. Check the Supabase insert policy and try again."
+          ? "The item could not be added. Refresh to check the item list, then try again."
       : params.error === "save-failed"
-        ? "The item could not be saved. Check the Supabase update policy and try again."
+        ? "The item could not be saved. Refresh to check its saved values, then try again."
         : null;
 
   return (

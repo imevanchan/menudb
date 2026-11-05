@@ -6,6 +6,7 @@ import {
   updateModifierGroup,
   updateModifierOption,
 } from "./actions";
+import { SubmitButton } from "./submit-button";
 
 type MenuItem = { id: string; name: string; active: boolean };
 type ModifierOption = {
@@ -43,7 +44,8 @@ export function ModifierEditor({
   const groupNames = new Map(groups.map((group) => [group.id, group.name]));
 
   return (
-    <section className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm sm:p-8">
+    <details className="rounded-3xl border border-black/10 bg-white p-6 shadow-sm sm:p-8">
+      <summary className="cursor-pointer font-semibold">Manage modifiers <span className="ml-2 text-sm font-normal text-[#68756f]">{groups.length} {groups.length === 1 ? "group" : "groups"} · {assignments.length} {assignments.length === 1 ? "item assignment" : "item assignments"}</span></summary>
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#a3472f]">Modifiers</p>
         <h3 className="mt-2 text-xl font-semibold">Configure customer choices</h3>
@@ -69,18 +71,20 @@ export function ModifierEditor({
           </label>
         </div>
         <div className="mt-4 flex justify-end">
-          <button className="rounded-full bg-[#27332e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black" type="submit">Add group</button>
+          <SubmitButton pendingLabel="Adding…" className="rounded-full bg-[#27332e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-black">Add group</SubmitButton>
         </div>
       </form>
 
       <div className="mt-6 space-y-6">
+        {!groups.length && <p className="rounded-xl bg-[#f7f5f0] p-4 text-sm text-[#52615b]">No modifier groups yet. Add a group such as Choose a side, then add options and attach it to an item.</p>}
         {groups.map((group) => {
           const options = [...(group.modifier_options ?? [])].sort(
             (a, b) => a.sort_order - b.sort_order,
           );
 
           return (
-            <div className="rounded-2xl border border-black/10 bg-[#faf9f6] p-5" key={group.id}>
+            <details className="rounded-2xl border border-black/10 bg-[#faf9f6] p-5" key={group.id}>
+              <summary className="mb-4 cursor-pointer font-semibold">{group.name} <span className="ml-2 text-sm font-normal text-[#68756f]">{options.length} options{!group.active ? " · Hidden" : ""}</span></summary>
               <form action={updateModifierGroup}>
                 <input name="groupId" type="hidden" value={group.id} />
                 <div className="grid gap-4 sm:grid-cols-3">
@@ -102,13 +106,14 @@ export function ModifierEditor({
                     <input className="h-4 w-4 accent-[#a3472f]" defaultChecked={group.active} name="active" type="checkbox" />
                     Group is available
                   </label>
-                  <button className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold hover:border-black/30" type="submit">Save group</button>
+                  <SubmitButton className="rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold hover:border-black/30">Save group</SubmitButton>
                 </div>
               </form>
 
               <div className="mt-5 border-t border-black/10 pt-5">
                 <p className="text-sm font-semibold">Options</p>
                 <div className="mt-3 space-y-3">
+                  {!options.length && <p className="text-sm text-[#68756f]">Add an option below. Required groups need enough available options to satisfy their minimum choices.</p>}
                   {options.map((option) => (
                     <form action={updateModifierOption} className="grid gap-3 rounded-xl border border-black/10 bg-white p-4 sm:grid-cols-[1fr_10rem_auto] sm:items-end" key={option.id}>
                       <input name="optionId" type="hidden" value={option.id} />
@@ -124,7 +129,7 @@ export function ModifierEditor({
                         <label className="flex items-center gap-2 text-xs font-semibold">
                           <input defaultChecked={option.active} name="active" type="checkbox" /> Active
                         </label>
-                        <button className="rounded-full border border-black/15 px-4 py-2 text-xs font-semibold" type="submit">Save</button>
+                        <SubmitButton className="rounded-full border border-black/15 px-4 py-2 text-xs font-semibold">Save</SubmitButton>
                       </div>
                     </form>
                   ))}
@@ -140,10 +145,10 @@ export function ModifierEditor({
                     Added price
                     <input className="mt-1.5 w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-sm font-normal text-[#27332e]" defaultValue="0.00" min="0" name="price" required step="0.01" type="number" />
                   </label>
-                  <button className="rounded-full bg-[#a3472f] px-4 py-2 text-xs font-semibold text-white" type="submit">Add option</button>
+                  <SubmitButton pendingLabel="Adding…" className="rounded-full bg-[#a3472f] px-4 py-2 text-xs font-semibold text-white">Add option</SubmitButton>
                 </form>
               </div>
-            </div>
+            </details>
           );
         })}
       </div>
@@ -163,20 +168,22 @@ export function ModifierEditor({
               {groups.filter((group) => group.active).map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
             </select>
           </label>
-          <button className="rounded-full bg-[#27332e] px-5 py-3 text-sm font-semibold text-white" type="submit">Attach group</button>
+          <SubmitButton pendingLabel="Attaching…" disabled={!items.length || !groups.some((group) => group.active)} className="rounded-full bg-[#27332e] px-5 py-3 text-sm font-semibold text-white">Attach group</SubmitButton>
         </form>
 
         <div className="mt-4 space-y-2">
+          {!assignments.length && <p className="text-sm text-[#68756f]">No item assignments yet. Select an item and an available modifier group above.</p>}
+          {(!items.length || !groups.some((group) => group.active)) && <p className="text-sm text-amber-900">You need a menu item and an available modifier group before attaching choices.</p>}
           {[...assignments].sort((a, b) => a.sort_order - b.sort_order).map((assignment) => (
             <form action={detachModifierGroup} className="flex items-center justify-between gap-4 rounded-xl border border-black/10 px-4 py-3 text-sm" key={`${assignment.menu_item_id}-${assignment.modifier_group_id}`}>
               <input name="itemId" type="hidden" value={assignment.menu_item_id} />
               <input name="groupId" type="hidden" value={assignment.modifier_group_id} />
               <span><strong>{itemNames.get(assignment.menu_item_id) ?? "Unknown item"}</strong> — {groupNames.get(assignment.modifier_group_id) ?? "Unknown group"}</span>
-              <button className="text-xs font-semibold text-[#a3472f] hover:underline" type="submit">Detach</button>
+              <SubmitButton pendingLabel="Detaching…" className="text-xs font-semibold text-[#a3472f] hover:underline">Detach</SubmitButton>
             </form>
           ))}
         </div>
       </div>
-    </section>
+    </details>
   );
 }
