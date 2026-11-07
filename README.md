@@ -147,10 +147,9 @@ Configured hours: Tuesday–Thursday 11:00–21:00, Friday–Saturday 11:00–22
 
 ## Dashboard publishing and project handoff
 
-Follow [publishing setup and deployment](docs/DEPLOYMENT.md) to apply `supabase/migrations/202611040001_publishing.sql`, approve the intended administrator, and enable server-side publishing. Until setup is complete, the admin panel displays the missing configuration and disables its publish button. An existing signed-in session is required to retrieve `/api/uber/menu`.
+Apply `supabase/migrations/202611040001_publishing.sql`, approve the intended administrator, and enable server-side publishing. Until setup is complete, the admin panel displays the missing configuration and disables its publish button. An existing signed-in session is required to retrieve `/api/uber/menu`.
 
 The dashboard records each attempt before contacting Uber, persists the prior menu before upload, and marks success only after read-back matches the managed menu fields. A database unique index prevents overlapping dashboard jobs. Interrupted attempts can be rechecked after five minutes without another upload. A fingerprint identifies whether saved changes differ from the last verified dashboard publish. These records describe this single-location sandbox demonstration, not a tamper-proof audit system.
 
 On November 4, 2026, the publishing migration was applied and both the local dashboard and the deployed Vercel dashboard completed a publish with the result “Published to Uber sandbox and verified by retrieval.” The hosted dashboard also correctly skipped an unchanged menu version. Anonymous REST requests to both publishing tables were denied. No synthetic success records are inserted.
 
-See the [portfolio demo and architecture](docs/DEMO.md) for a walkthrough, screenshot plan, and resume wording.
