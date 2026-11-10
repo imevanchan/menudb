@@ -93,8 +93,15 @@ async function MenuData() {
           .sort((a, b) => a.sort_order - b.sort_order);
 
         return (
-          <section key={category.id}>
-            <h3 className="text-xl font-semibold tracking-tight">{category.name}</h3>
+          <details key={category.id} className="group/category rounded-2xl border border-black/10 bg-white shadow-sm">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-2xl px-6 py-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a3472f] [&::-webkit-details-marker]:hidden">
+              <h3 className="text-xl font-semibold tracking-tight">{category.name}</h3>
+              <span className="flex shrink-0 items-center gap-3 text-sm text-[#68756f]">
+                {items.length} {items.length === 1 ? "item" : "items"}
+                <span aria-hidden="true" className="transition-transform group-open/category:rotate-180">⌄</span>
+              </span>
+            </summary>
+            {category.description && <p className="px-6 text-sm text-[#68756f]">{category.description}</p>}
             <div className="mt-4 divide-y divide-black/10 rounded-2xl border border-black/10 bg-white px-6 shadow-sm">
               {items.map((item) => (
                 <article className="py-6" id={`item-${item.id}`} key={item.id}>
@@ -125,7 +132,7 @@ async function MenuData() {
                 </article>
               ))}
             </div>
-          </section>
+          </details>
         );
       })}
     </div>
@@ -138,7 +145,7 @@ export default function MenuPage() {
       <main className="mx-auto min-h-[70vh] max-w-4xl px-6 py-20 sm:py-24">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#a3472f]">Database connection</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">Master menu</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-[#52615b]">Explore the saved master menu. Expand a modifier group beneath an item to view its options and prices.</p>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-[#52615b]">Expand a category to browse its items, then expand a modifier group to view options and prices.</p>
         <Suspense fallback={<p className="mt-12 text-[#68756f]">Loading the menu…</p>}>
           <MenuData />
         </Suspense>
