@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { SiteShell } from "../components/site-shell";
@@ -38,7 +37,14 @@ async function MenuData() {
             description,
             price_cents,
             active,
-            sort_order
+            sort_order,
+            menu_item_modifier_groups(
+              sort_order,
+              modifier_groups(
+                id, name, minimum_selections, maximum_selections, active,
+                modifier_options(id, name, price_cents, active, sort_order)
+              )
+            )
           )
         )
       `)
@@ -91,14 +97,32 @@ async function MenuData() {
             <h3 className="text-xl font-semibold tracking-tight">{category.name}</h3>
             <div className="mt-4 divide-y divide-black/10 rounded-2xl border border-black/10 bg-white px-6 shadow-sm">
               {items.map((item) => (
-                <Link className="group flex items-start justify-between gap-6 py-6" href={`/menu/items/${item.id}`} key={item.id}>
-                  <div>
-                    <h4 className="font-semibold">{item.name}</h4>
-                    <p className="mt-1 text-sm leading-6 text-[#68756f]">{item.description}</p>
-                    <p className="mt-2 text-xs font-semibold text-[#a3472f] opacity-0 transition-opacity group-hover:opacity-100">Customize item →</p>
+                <article className="py-6" id={`item-${item.id}`} key={item.id}>
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="min-w-0">
+                      <h4 className="font-semibold">{item.name}</h4>
+                      {item.description && <p className="mt-1 text-sm leading-6 text-[#68756f]">{item.description}</p>}
+                    </div>
+                    <p className="shrink-0 font-semibold">${(item.price_cents / 100).toFixed(2)}</p>
                   </div>
-                  <p className="shrink-0 font-semibold">${(item.price_cents / 100).toFixed(2)}</p>
-                </Link>
+                  <div className="mt-3 space-y-2">
+                    {[...(item.menu_item_modifier_groups ?? [])].sort((a, b) => a.sort_order - b.sort_order).map((assignment) => {
+                      const related = assignment.modifier_groups;
+                      const group = Array.isArray(related) ? related[0] : related;
+                      if (!group?.active) return null;
+                      const options = [...(group.modifier_options ?? [])].filter((option) => option.active).sort((a, b) => a.sort_order - b.sort_order);
+                      if (!options.length) return null;
+                      return <details key={group.id} className="rounded-xl border border-black/10 bg-[#faf9f6]">
+                        <summary className="cursor-pointer rounded-xl px-4 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a3472f]">
+                          {group.name}<span className="ml-2 text-xs font-normal text-[#68756f]">{group.minimum_selections > 0 ? "Required" : "Optional"} · {group.minimum_selections === group.maximum_selections ? `Choose ${group.maximum_selections}` : `Choose ${group.minimum_selections}–${group.maximum_selections}`}</span>
+                        </summary>
+                        <ul className="divide-y divide-black/5 border-t border-black/10 px-4">{options.map((option) => <li key={option.id} className="flex items-start justify-between gap-4 py-3 text-sm">
+                          <span>{option.name}</span><span className="shrink-0 text-[#68756f]">{option.price_cents === 0 ? "Included" : `${option.price_cents > 0 ? "+" : "−"}$${(Math.abs(option.price_cents) / 100).toFixed(2)}`}</span>
+                        </li>)}</ul>
+                      </details>;
+                    })}
+                  </div>
+                </article>
               ))}
             </div>
           </section>
@@ -114,7 +138,7 @@ export default function MenuPage() {
       <main className="mx-auto min-h-[70vh] max-w-4xl px-6 py-20 sm:py-24">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#a3472f]">Database connection</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">Master menu</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-[#52615b]">Explore the saved master menu and customize an item to preview its options. Administrators can edit the menu and publish updates to the Uber Eats sandbox.</p>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-[#52615b]">Explore the saved master menu. Expand a modifier group beneath an item to view its options and prices.</p>
         <Suspense fallback={<p className="mt-12 text-[#68756f]">Loading the menu…</p>}>
           <MenuData />
         </Suspense>
